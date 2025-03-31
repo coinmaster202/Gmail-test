@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>One Two Gmail Tool</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #F3F4F6;
+      --text: #1F2937;
+      --card: #ffffff;
+      --tab-bg: #1E3A8A;
+      --tab-hover: #7E22CE;
+      --tab-active: #9333EA;
+      --button-bg: #9333EA;
+      --button-hover: #7E22CE;
+      --input-border: #ccc;
+      --input-disabled: #e5e7eb;
+      --input-disabled-text: #9ca3af;
+    }
+    body.dark {
+      --bg: #111827;
+      --text: #F9FAFB;
+      --card: #1F2937;
+      --tab-bg: #374151;
+      --tab-hover: #6B21A8;
+      --tab-active: #9333EA;
+      --button-bg: #6D28D9;
+      --button-hover: #5B21B6;
+      --input-border: #4B5563;
+      --input-disabled: #374151;
+      --input-disabled-text: #9CA3AF;
+    }
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg);
+      color: var(--text);
+    }
+    header {
+      background: linear-gradient(to right, var(--tab-bg), var(--tab-active));
+      color: white;
+      text-align: center;
+      padding: 30px 20px;
+      position: relative;
+    }
+    #theme-toggle {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      background: transparent;
+      border: 2px solid white;
+      color: white;
+      padding: 5px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    #user-location {
+      font-size: 14px;
+      text-align: center;
+      color: white;
+      opacity: 0.8;
+      margin-top: 5px;
+    }
+    main {
+      max-width: 900px;
+      margin: 30px auto;
+      padding: 20px;
+      background: var(--card);
+      border-radius: 12px;
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+    }
+    .tabs {
+      display: flex;
+      justify-content: space-around;
+      background: var(--tab-bg);
+      color: white;
+      border-radius: 12px 12px 0 0;
+      cursor: pointer;
+    }
+    .tab {
+      flex: 1;
+      text-align: center;
+      padding: 15px;
+      transition: background 0.3s;
+    }
+    .tab:hover { background: var(--tab-hover); }
+    .active-tab { background: var(--tab-active); font-weight: bold; }
+    .content { display: none; padding: 20px; }
+    .active-content { display: block; }
+    input, button, select, textarea {
+      width: 100%;
+      margin-bottom: 15px;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: 1px solid var(--input-border);
+      background: var(--card);
+      color: var(--text);
+      box-sizing: border-box;
+    }
+    button {
+      background: var(--button-bg);
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: background 0.3s, transform 0.1s;
+    }
+    button:hover {
+      background: var(--button-hover);
+      transform: translateY(-2px);
+    }
+    select[disabled] {
+      background: var(--input-disabled);
+      color: var(--input-disabled-text);
+      cursor: not-allowed;
+    }
+    footer {
+      text-align: center;
+      background: var(--tab-bg);
+      color: white;
+      padding: 20px;
+    }
+    #result ul, #csv-output ul {
+      list-style: none;
+      padding: 0;
+    }
+    #result li, #csv-output li {
+      padding: 5px 0;
+    }
+    #loader {
+      text-align: center;
+      display: none;
+    }
+    #loader::after {
+      content: "";
+      display: inline-block;
+      width: 24px;
+      height: 24px;
+      border: 3px solid var(--button-bg);
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    #success-message, #copy-success {
+      text-align: center;
+      color: green;
+      font-weight: bold;
+      display: none;
+    }
+    #variation-count-display, #username-error {
+      text-align: center;
+      font-size: 14px;
+      margin-bottom: 10px;
+      color: var(--text);
+    }
+    #username-error { color: red; }
+    @media (max-width: 600px) {
+      .tabs { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+<header>
+  <h1>One Two Gmail Tool</h1>
+  <button id="theme-toggle" aria-label="Toggle theme">Dark Mode</button>
+  <div id="user-location">Detecting location...</div>
+</header>
+<main>
+  <div class="tabs" role="tablist">
+    <div class="tab active-tab" role="tab" onclick="switchTab('gmail-gen')">Gmail Generator</div>
+    <div class="tab" role="tab" onclick="switchTab('email-csv')">Convert to CSV</div>
+  </div>
+
+  <section id="gmail-gen" class="content active-content" role="tabpanel">
+    <input type="password" id="access-code" placeholder="Enter your access code" aria-label="Access code">
+    <button id="access-btn">Submit Access Code</button>
+
+    <div id="generator-section" style="display:none;">
+      <input type="text" id="username" placeholder="Enter Gmail username" aria-label="Gmail username">
+      <div id="username-error"></div>
+      <select id="variation-count" aria-label="Number of variations"></select>
+      <select id="domain" aria-label="Domain">
+        <option value="@gmail.com">@gmail.com</option>
+        <option value="@googlemail.com">@googlemail.com</option>
+      </select>
+      <div id="variation-count-display"></div>
+      <div id="loader"></div>
+      <div id="success-message">Gmail variations generated!</div>
+      <button id="generate-btn">Generate Gmail Variations</button>
+      <button id="copy-btn">Copy All Variations</button>
+      <div id="copy-success">Copied!</div>
+      <button id="download-variations-btn">Download CSV</button>
+      <div id="result"></div>
+    </div>
+  </section>
+
+  <section id="email-csv" class="content" role="tabpanel">
+    <textarea id="email-list" rows="6" placeholder="example@gmail.com"></textarea>
+    <button id="convert-btn">Convert to CSV</button>
+    <button id="download-csv-btn">Download CSV</button>
+    <div id="csv-output"></div>
+  </section>
+</main>
+<footer>
+  <p>&copy; 2025 One Two Gmail Tool</p>
+</footer>
+
+<script>
+  let masterAccess = false;
+  let latestVariations = [];
+
+  function switchTab(tab) {
+    document.querySelectorAll(".content").forEach(c => c.classList.remove("active-content"));
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active-tab"));
+    document.getElementById(tab).classList.add("active-content");
+    document.querySelector(\`.tabs .tab:nth-child(\${tab === 'gmail-gen' ? 1 : 2})\`).classList.add("active-tab");
+  }
+
+  document.getElementById("access-btn").onclick = () => {
+    const code = document.getElementById("access-code").value.trim();
+    const select = document.getElementById("variation-count");
+    localStorage.setItem("accessCode", code);
+
+    if (code === "2025") {
+      masterAccess = true;
+      select.innerHTML = \`<option selected disabled>Unlimited (Master)</option>\`;
+      select.disabled = true;
+    } else if (code === "1234") {
+      masterAccess = false;
+      select.disabled = false;
+      select.innerHTML = [5, 10, 15, 20].map(n => \`<option value="\${n}">\${n}</option>\`).join("");
+    } else {
+      alert("Invalid access code.");
+      return;
+    }
+
+    document.getElementById("generator-section").style.display = "block";
+    document.getElementById("username").focus();
+  };
+
+  document.getElementById("username").addEventListener("input", () => {
+    const username = document.getElementById("username").value.trim();
+    const display = document.getElementById("variation-count-display");
+    const error = document.getElementById("username-error");
+    if (/^[a-zA-Z0-9]+$/.test(username)) {
+      const total = Math.pow(2, username.length - 1) - 1;
+      display.textContent = \`Total dot variations possible: \${total}\`;
+      error.textContent = "";
+    } else {
+      display.textContent = "";
+      error.textContent = "Only letters and numbers allowed (no dots, no special characters)";
+    }
+  });
+
+  document.getElementById("generate-btn").onclick = () => {
+    const username = document.getElementById("username").value.trim();
+    const domain = document.getElementById("domain").value;
+    const count = parseInt(document.getElementById("variation-count").value);
+    const loader = document.getElementById("loader");
+    const success = document.getElementById("success-message");
+
+    if (!/^[a-zA-Z0-9]+$/.test(username)) {
+      document.getElementById("username-error").textContent = "Invalid username.";
+      return;
+    }
+
+    loader.style.display = "block";
+    success.style.display = "none";
+
+    setTimeout(() => {
+      const limit = masterAccess ? Infinity : count;
+      latestVariations = generateDotVariations(username, domain, limit);
+      displayVariations(latestVariations);
+      loader.style.display = "none";
+      success.style.display = "block";
+      setTimeout(() => success.style.display = "none", 3000);
+    }, 500);
+  };
+
+  function generateDotVariations(username, domain, limit = Infinity) {
+    const results = new Set();
+    const positions = username.length - 1;
+    const total = Math.pow(2, positions);
+
+    for (let i = 1; i < total && results.size < limit; i++) {
+      let variation = "";
+      for (let j = 0; j < username.length; j++) {
+        variation += username[j];
+        if (j < username.length - 1 && (i & (1 << (positions - 1 - j)))) {
+          variation += ".";
+        }
+      }
+      results.add(\`\${variation}\${domain}\`);
+    }
+
+    return Array.from(results);
+  }
+
+  function displayVariations(variations) {
+    const result = document.getElementById("result");
+    result.innerHTML = "<ul>" + variations.map(email => \`<li>\${email}</li>\`).join("") + "</ul>";
+  }
+
+  document.getElementById("copy-btn").onclick = () => {
+    if (latestVariations.length === 0) return;
+    const text = latestVariations.join("\n");
+    navigator.clipboard.writeText(text).then(() => {
+      document.getElementById("copy-success").style.display = "block";
+      setTimeout(() => document.getElementById("copy-success").style.display = "none", 2000);
+    }).catch(() => alert("Failed to copy to clipboard."));
+  };
+
+  document.getElementById("download-variations-btn").onclick = () => {
+    if (latestVariations.length === 0) return;
+    const blob = new Blob([\`Email\n\${latestVariations.join("\n")}\`], { type: 'text/csv' });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "gmail_variations.csv";
+    a.click();
+  };
+
+  document.getElementById("convert-btn").onclick = () => {
+    const input = document.getElementById("email-list").value.trim().split(/\s+/);
+    const output = input.map(email => \`<li>\${email}</li>\`).join("");
+    document.getElementById("csv-output").innerHTML = \`<ul>\${output}</ul>\`;
+  };
+
+  document.getElementById("download-csv-btn").onclick = () => {
+    const emails = document.getElementById("email-list").value.trim().split(/\s+/);
+    if (!emails.length) return;
+    const blob = new Blob([\`Email\n\${emails.join("\n")}\`], { type: 'text/csv' });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "converted_emails.csv";
+    a.click();
+  };
+
+  document.getElementById("theme-toggle").onclick = () => {
+    document.body.classList.toggle("dark");
+    const mode = document.body.classList.contains("dark") ? "Light Mode" : "Dark Mode";
+    document.getElementById("theme-toggle").textContent = mode;
+    localStorage.setItem("theme", document.body.classList.contains("dark") ? "dark" : "light");
+  };
+
+  (function applySavedTheme() {
+    const saved = localStorage.getItem("theme");
+    if (saved === "dark") {
+      document.body.classList.add("dark");
+      document.getElementById("theme-toggle").textContent = "Light Mode";
+    }
+    const savedCode = localStorage.getItem("accessCode");
+    if (savedCode) {
+      document.getElementById("access-code").value = savedCode;
+      document.getElementById("access-btn").click();
+    }
+  })();
+
+  fetch("https://ipapi.co/json")
+    .then(res => res.json())
+    .then(data => {
+      const locationText = \`\${data.city || ''}, \${data.region || ''}, \${data.country_name || ''}\`;
+      document.getElementById("user-location").textContent = \`Location: \${locationText}\`;
+    })
+    .catch(() => {
+      document.getElementById("user-location").textContent = "Location unavailable";
+    });
+</script>
+</body>
+</html>
