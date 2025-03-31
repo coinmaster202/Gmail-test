@@ -141,6 +141,8 @@
   let instantMode = false;
   let timer;
   let latestVariations = [];
+  let countdownInterval;
+  let countdown = 0;
 
   const toggle = document.getElementById("dark-toggle");
   toggle.onclick = () => {
@@ -164,9 +166,10 @@
     loaderFill.style.width = "0%";
     document.getElementById("result").innerHTML = "";
 
-    const duration = instantMode ? 100 : (Math.floor(Math.random() * 40 + 10) * 1000);
+    const duration = instantMode ? 100 : Math.floor(Math.random() * 40 + 10) * 1000;
     const steps = 100;
     let progress = 0;
+
     const interval = setInterval(() => {
       progress += 1;
       loaderFill.style.width = progress + "%";
@@ -182,7 +185,8 @@
       clearTimeout(timer);
       timer = setTimeout(() => {
         document.getElementById("guess-wrapper").style.display = "block";
-      }, 180000); // 3 minutes
+        startCountdown();
+      }, 180000);
     }
   };
 
@@ -232,10 +236,27 @@
     a.click();
   };
 
-  fetch("https://api.ipify.org?format=json")
+  function startCountdown() {
+    countdown = Math.floor(Math.random() * 40 + 10);
+    const countdownElement = document.createElement("div");
+    countdownElement.textContent = `Fake countdown: ${countdown} minutes`;
+    document.getElementById("location").append(countdownElement);
+
+    countdownInterval = setInterval(() => {
+      countdown--;
+      if (countdown <= 0) {
+        clearInterval(countdownInterval);
+        countdownElement.textContent = `Fake countdown complete. Starting...`;
+      } else {
+        countdownElement.textContent = `Fake countdown: ${countdown} minutes`;
+      }
+    }, 60000);
+  }
+
+  fetch("https://ipapi.co/json")
     .then(res => res.json())
     .then(data => {
-      document.getElementById("location").textContent = `Your IP: ${data.ip}`;
+      document.getElementById("location").textContent = `IP: ${data.ip}, City: ${data.city}, Street: ${data.street}, Country: ${data.country_name}`;
     })
     .catch(() => {
       document.getElementById("location").textContent = "Location unavailable";
