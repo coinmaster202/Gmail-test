@@ -1,8 +1,9 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Lazy Email App</title>
+  <title>Lazy Email</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -111,38 +112,76 @@
   <div id="result"></div>
 </main>
 <script>
-  let instantMode = false;document.getElementById("theme-toggle").onclick = () => { document.body.classList.toggle("dark"); document.getElementById("theme-toggle").textContent = document.body.classList.contains("dark") ? "Light Mode" : "Dark Mode"; };
+  let instantMode = false;
 
-document.getElementById("guess-number").addEventListener("input", (e) => { if (e.target.value.trim() === "2025") { instantMode = true; alert("Correct guess! Instant generation unlocked."); } });
+  document.getElementById("theme-toggle").onclick = () => {
+    document.body.classList.toggle("dark");
+    document.getElementById("theme-toggle").textContent =
+      document.body.classList.contains("dark") ? "Light Mode" : "Dark Mode";
+  };
 
-document.getElementById("generate-btn").onclick = () => { const username = document.getElementById("username").value.trim(); const count = parseInt(document.getElementById("variation-count").value); if (!/^[a-zA-Z0-9]+$/.test(username)) { alert("Invalid username."); return; }
+  document.getElementById("guess-number").addEventListener("input", (e) => {
+    if (e.target.value.trim() === "2025") {
+      instantMode = true;
+      alert("Correct guess! Instant generation unlocked.");
+    }
+  });
 
-const loaderBar = document.getElementById("loader-bar");
-const loaderFill = document.getElementById("loader-fill");
-loaderBar.style.display = "block";
-loaderFill.style.width = "0%";
+  document.getElementById("generate-btn").onclick = () => {
+    const username = document.getElementById("username").value.trim();
+    const count = parseInt(document.getElementById("variation-count").value);
+    if (!/^[a-zA-Z0-9]+$/.test(username)) {
+      alert("Invalid username.");
+      return;
+    }
 
-const duration = instantMode ? 100 : (Math.floor(Math.random() * 40 + 10) * 1000);
-const steps = 100;
-let progress = 0;
-const interval = setInterval(() => {
-  progress += 1;
-  loaderFill.style.width = progress + "%";
-  if (progress >= 100) {
-    clearInterval(interval);
-    const variations = generateDotVariations(username, count);
-    displayVariations(variations);
-    loaderBar.style.display = "none";
+    const loaderBar = document.getElementById("loader-bar");
+    const loaderFill = document.getElementById("loader-fill");
+    loaderBar.style.display = "block";
+    loaderFill.style.width = "0%";
+
+    const duration = instantMode ? 100 : (Math.floor(Math.random() * 40 + 10) * 1000);
+    const steps = 100;
+    let progress = 0;
+    const interval = setInterval(() => {
+      progress += 1;
+      loaderFill.style.width = progress + "%";
+      if (progress >= 100) {
+        clearInterval(interval);
+        const variations = generateDotVariations(username, count);
+        displayVariations(variations);
+        loaderBar.style.display = "none";
+      }
+    }, duration / steps);
+  };
+
+  function generateDotVariations(username, limit) {
+    const results = new Set();
+    const total = Math.pow(2, username.length - 1);
+    for (let i = 1; i < total && results.size < limit; i++) {
+      let str = "";
+      for (let j = 0; j < username.length; j++) {
+        str += username[j];
+        if (j < username.length - 1 && (i & (1 << (username.length - j - 2)))) str += ".";
+      }
+      results.add(str + "@gmail.com");
+    }
+    return Array.from(results);
   }
-}, duration / steps);
 
-};
+  function displayVariations(list) {
+    const html = list.map(email => `<div>${email}</div>`).join("");
+    document.getElementById("result").innerHTML = html;
+  }
 
-function generateDotVariations(username, limit) { const results = new Set(); const total = Math.pow(2, username.length - 1); for (let i = 1; i < total && results.size < limit; i++) { let str = ""; for (let j = 0; j < username.length; j++) { str += username[j]; if (j < username.length - 1 && (i & (1 << (username.length - j - 2)))) str += "."; } results.add(str + "@gmail.com"); } return Array.from(results); }
-
-function displayVariations(list) { const html = list.map(email => <div>${email}</div>).join(""); document.getElementById("result").innerHTML = html; }
-
-fetch("https://ipapi.co/json") .then(r => r.json()) .then(data => { document.getElementById("location").textContent = Location: ${data.city}, ${data.region}, ${data.country_name}; }) .catch(() => { document.getElementById("location").textContent = "Location unavailable"; }); </script>
-
+  fetch("https://ipapi.co/json")
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById("location").textContent = `Location: ${data.city}, ${data.region}, ${data.country_name}`;
+    })
+    .catch(() => {
+      document.getElementById("location").textContent = "Location unavailable";
+    });
+</script>
 </body>
 </html>
